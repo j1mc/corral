@@ -42,10 +42,10 @@ Add `--rm` for a pure gate, where nothing runs after it.
 ### What it writes
 
 Every run fills an artifact directory (`--artifacts`, default
-`corral-vmtest-out/`). Upload it from CI and a failure is diagnosable without
-The generated SSH identity is kept in a private temporary directory. The
-directory is outside the artifact directory. With the default `--keep`, use the
-SSH command printed in the summary.
+`corral-vmtest-out/`). Upload it from CI; a failure is diagnosable without a
+second run. The generated SSH identity is kept in a private temporary directory
+outside the artifact directory. With the default `--keep`, use the SSH command
+printed in the summary.
 
 | File | What it tells you |
 |---|---|
@@ -55,7 +55,6 @@ SSH command printed in the summary.
 | `ready.png` / `failure.png` | the screen at the moment the run ended |
 | `timelapse.webm` | the boot as a video (`--video`, needs ffmpeg) |
 | `diagnostics/` | failed units, `bootc status`, journal warnings |
-| `layer/Containerfile` | exactly what the run added to the image |
 
 ### Exit codes
 

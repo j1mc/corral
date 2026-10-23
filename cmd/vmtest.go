@@ -76,10 +76,10 @@ Artifacts (in --artifacts, default ` + vmtest.DefaultArtifactDir + `):
   ready.png        the screen when the guest became ready (failure.png if not)
   timelapse.webm   the boot as a video (--video, needs ffmpeg)
   diagnostics/     failed units, bootc status, journal warnings
-  layer/           the generated Containerfile and overlay, when one was built
 
 The private SSH identity is kept outside the artifact directory. With the
 default --keep, the summary prints the command that uses it.
+The temporary image-layer build context is removed after the build and is not uploaded.
 
 Exit codes: 0 passed, 1 bad spec, 2 this host cannot run it, 3 layer build
 failed, 4 disk build failed, 5 VM would not start, 6 never became ready,

@@ -100,8 +100,20 @@ func (r *Runner) Run(spec *Spec, out io.Writer) (*Result, error) {
 	}
 	result.SSH.IdentityFile = keys.PrivatePath
 
-	layered, err := r.Image.Layer(spec, keys.AuthorizedKeys(), filepath.Join(artifacts, "layer"), progress)
+	layerDir, err := os.MkdirTemp("", "corral-vmtest-layer-")
+	if err != nil {
+		return result, result.fail(ExitHost, fmt.Errorf("creating temporary layer context: %w", err))
+	}
+	defer func() {
+		if err := os.RemoveAll(layerDir); err != nil {
+			result.Note("could not remove temporary layer context: %v", err)
+		}
+	}()
+	layered, err := r.Image.Layer(spec, keys.AuthorizedKeys(), layerDir, progress)
 	result.Layer = layered
+	// The generated context can contain account hashes and user-supplied files.
+	// Keep it out of the result and remove it after the build.
+	result.Layer.ContextDir = ""
 	if err != nil {
 		return result, result.fail(ExitLayer, err)
 	}
@@ -145,7 +157,6 @@ func (r *Runner) Run(spec *Spec, out io.Writer) (*Result, error) {
 	result.Ready = true
 	result.BootSeconds = r.Clock.Now().Sub(bootStarted).Seconds()
 	progress(fmt.Sprintf("%s is ready after %.0fs (%s)", spec.Name, result.BootSeconds, result.ReadyBy))
-
 	if endpoint, err := r.VM.SSHEndpoint(spec.Name); err == nil {
 		result.SSH.User, result.SSH.Host, result.SSH.Port = spec.SSHUser, endpoint.Host, endpoint.Port
 		result.SSH.Command = fmt.Sprintf("ssh -i %s -p %d %s@%s", keys.PrivatePath, endpoint.Port, spec.SSHUser, endpoint.Host)
