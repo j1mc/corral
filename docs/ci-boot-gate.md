@@ -32,7 +32,8 @@ corral vmtest gate --bootc ghcr.io/tuna-os/yellowfin:gnome-testing \
   --check 'systemctl --failed --no-legend' \
   --video
 # exit 0 → the image booted, the hook passed, every check passed
-ssh -i corral-vmtest-out/ssh/id_ed25519 -p 2242 tester@127.0.0.1
+# With --keep, use the SSH command printed in the summary. The private key
+# is kept outside corral-vmtest-out/ and is not uploaded with the evidence.
 corral delete gate
 ```
 
@@ -42,7 +43,9 @@ Add `--rm` for a pure gate, where nothing runs after it.
 
 Every run fills an artifact directory (`--artifacts`, default
 `corral-vmtest-out/`). Upload it from CI and a failure is diagnosable without
-a second run:
+a second run. The generated SSH identity is kept in a private temporary
+directory outside the artifact directory; with the default `--keep`, use the
+SSH command printed in the summary.
 
 | File | What it tells you |
 |---|---|
@@ -53,7 +56,6 @@ a second run:
 | `timelapse.webm` | the boot as a video (`--video`, needs ffmpeg) |
 | `diagnostics/` | failed units, `bootc status`, journal warnings |
 | `layer/Containerfile` | exactly what the run added to the image |
-| `ssh/id_ed25519` | the run's own keypair |
 
 ### Exit codes
 

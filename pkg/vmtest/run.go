@@ -81,7 +81,20 @@ func (r *Runner) Run(spec *Spec, out io.Writer) (*Result, error) {
 		progress(note)
 	}
 
-	keys, err := r.Image.Keypair(filepath.Join(artifacts, "ssh"))
+	keyDir, err := os.MkdirTemp("", "corral-vmtest-ssh-")
+	if err != nil {
+		return result, result.fail(ExitHost, fmt.Errorf("creating temporary SSH key directory: %w", err))
+	}
+	keepKeyDir := false
+	defer func() {
+		if keepKeyDir {
+			return
+		}
+		if err := os.RemoveAll(keyDir); err != nil {
+			result.Note("could not remove temporary SSH identity: %v", err)
+		}
+	}()
+	keys, err := r.Image.Keypair(keyDir)
 	if err != nil {
 		return result, result.fail(ExitHost, err)
 	}
@@ -135,7 +148,6 @@ func (r *Runner) Run(spec *Spec, out io.Writer) (*Result, error) {
 
 	if endpoint, err := r.VM.SSHEndpoint(spec.Name); err == nil {
 		result.SSH.User, result.SSH.Host, result.SSH.Port = spec.SSHUser, endpoint.Host, endpoint.Port
-		result.SSH.Password = spec.passwordFor(spec.SSHUser)
 		result.SSH.Command = fmt.Sprintf("ssh -i %s -p %d %s@%s", keys.PrivatePath, endpoint.Port, spec.SSHUser, endpoint.Host)
 	}
 
@@ -178,6 +190,7 @@ func (r *Runner) Run(spec *Spec, out io.Writer) (*Result, error) {
 	}
 
 	result.Kept = spec.Keep
+	keepKeyDir = spec.Keep
 	if !spec.Keep {
 		progress("deleting " + spec.Name)
 		if err := r.VM.Delete(spec.Name); err != nil {
@@ -520,19 +533,6 @@ func copySerialLog(name, artifacts string) (string, error) {
 		return "", err
 	}
 	return path, nil
-}
-
-// passwordFor returns the password the spec set for a user, if any.
-func (s *Spec) passwordFor(user string) string {
-	if user == "root" {
-		return s.RootPassword
-	}
-	for _, u := range s.Users {
-		if u.Name == user {
-			return u.Password
-		}
-	}
-	return ""
 }
 
 // operatorKey returns the caller's own public key, so the VM the run leaves
