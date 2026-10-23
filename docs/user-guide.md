@@ -471,8 +471,8 @@ corral vmtest gate --bootc ghcr.io/tuna-os/yellowfin:latest \
 ```
 
 With the default `--keep` behavior, use the SSH command printed in the
-summary. Its private key is kept outside the artifact directory, so uploading
-the evidence does not expose it.
+summary. Its private key stays outside the artifact directory, so the uploaded
+evidence does not expose it.
 
 The run leaves the VM up, so the next step tests a real machine over SSH.
 It also writes the guest's serial console, a screenshot of every stage of the

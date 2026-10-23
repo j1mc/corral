@@ -262,17 +262,19 @@ func TestRunner_Run(t *testing.T) {
 			if _, statErr := os.Stat(filepath.Join(spec.Artifacts, ResultFile)); statErr != nil {
 				t.Errorf("no result file: %v", statErr)
 			}
-			rel, relErr := filepath.Rel(spec.Artifacts, host.keyDir)
-			if relErr != nil || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
-				t.Errorf("SSH key directory %q is inside artifacts %q", host.keyDir, spec.Artifacts)
-			}
-			if tc.keep {
-				if _, statErr := os.Stat(host.keyDir); statErr != nil {
-					t.Errorf("kept SSH key directory %q: %v", host.keyDir, statErr)
+			if host.keyDir != "" {
+				rel, relErr := filepath.Rel(spec.Artifacts, host.keyDir)
+				if relErr != nil || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
+					t.Errorf("SSH key directory %q is inside artifacts %q", host.keyDir, spec.Artifacts)
 				}
-				t.Cleanup(func() { _ = os.RemoveAll(host.keyDir) })
-			} else if _, statErr := os.Stat(host.keyDir); !os.IsNotExist(statErr) {
-				t.Errorf("temporary SSH key directory %q still exists: %v", host.keyDir, statErr)
+				if tc.keep {
+					if _, statErr := os.Stat(host.keyDir); statErr != nil {
+						t.Errorf("kept SSH key directory %q: %v", host.keyDir, statErr)
+					}
+					t.Cleanup(func() { _ = os.RemoveAll(host.keyDir) })
+				} else if _, statErr := os.Stat(host.keyDir); !os.IsNotExist(statErr) {
+					t.Errorf("temporary SSH key directory %q still exists: %v", host.keyDir, statErr)
+				}
 			}
 		})
 	}
