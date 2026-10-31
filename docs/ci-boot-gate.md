@@ -222,7 +222,7 @@ wastes the whole run.
 
 ### Guest behavior assertions
 
-The optional guest suite adapts the boot, identity and graphical scenarios from
+The guest suite is optional. It adapts the boot, identity and graphical scenarios from
 [Frostyard's smoke features](https://github.com/frostyard/testsuite/tree/4cd5e6096b4daca53c24d0eb3523013e07521d16/tests/smoke/features).
 It uses the same spec and SSH `checks:` machinery, not a BDD runner or a
 container test. For a headless image, omit `desktop`:
@@ -234,8 +234,8 @@ guestAssertions:
   versionId: "41"         # optional exact VERSION_ID
 ```
 
-For a desktop image, specify the installed session executable and the active
-systemd display-manager unit (names differ by distribution):
+For a desktop image, specify the installed session executable and the
+display-manager unit that systemd must show as active (names differ by distribution):
 
 ```yaml
 bootc: ghcr.io/tuna-os/yellowfin:gnome-testing
@@ -249,12 +249,14 @@ screenshots:
 ```
 
 The suite checks the system bus, journal, systemd service inventory and
-os-release identity and human-readable names. Desktop checks additionally
-require a graphical default target, the specified executable and an active
-manager. Missing tools and failed scenarios fail the run; their commands and
+os-release identity and human-readable names. A desktop check also needs a
+graphical default target, the specified executable and an active manager.
+Missing tools and failed scenarios fail the run; their commands and
 output are in `result.json` alongside the serial log and other artifacts.
 Other `checks:` still run. A headless configuration makes no claim about the
-absence of a desktop. Add image-specific checks (including any failed-unit
+absence of a desktop.
+
+Add image-specific checks (including any failed-unit
 allowlist or provenance requirements) separately; the suite does not assume
 Frostyard's distribution or packages. A painted frame is useful evidence but
 not proof of a successful user login.
@@ -274,8 +276,8 @@ sudo -E go test -tags e2evmtest -timeout 90m -count=1 -v ./pkg/vmtest/ -run 'Tes
 
 This also boots the headless image with a deliberately incorrect identity and
 asserts an `ExitCheck` failure with check output, serial log and result file.
-The tests skip unconfigured image cases or unavailable VM prerequisites, so
-inspect the test output rather than treating a skipped case as boot evidence.
+A test skips a case when you do not configure its image or when the host does not
+have a VM prerequisite. Read the test output: a skipped case is not boot evidence.
 
 ### GitHub Actions
 
